@@ -33,9 +33,11 @@ parser.add_argument('--n_height', type=int, default=64,
                     help='Number of height for 2D matrix conversion of 1D waveform. notated as h.')
 parser.add_argument('--n_layer', type=int, default=8, help='Number of layers')
 parser.add_argument('--n_flow', type=int, default=8, help='Number of layers')
-parser.add_argument('--n_layer_per_cycle', type=int, default=5, help="number of layers inside a single flow for height dilation cycle."
-                                                                     "ex: 3 with --n_layer=8 equals [1 2 4 1 2 4 1 2]"
-                                                                     "ex2: 5 with --n_layer=8 equals [1 2 4 8 16 1 2 4]")
+parser.add_argument('--n_layer_per_cycle', type=int, default=5,
+                    help="number of layers inside a single flow for height dilation cycle."
+                         "ex: 3 with --n_layer=8 equals [1 2 4 1 2 4 1 2]"
+                         "ex2: 5 with --n_layer=8 equals [1 2 4 8 16 1 2 4]")
+
 parser.add_argument('--num_workers', type=int, default=0, help='Number of workers')
 parser.add_argument('--num_gpu', type=int, default=1, help='Number of GPUs to use. >1 uses DataParallel')
 

@@ -29,7 +29,7 @@ class WaveFlowCoupling2D(nn.Module):
                              gate_channels=filter_size, skip_channels=filter_size,
                              kernel_size=3, cin_channels=cin_channel, dilation_h=self.dilation_h,
                              dilation_w=self.dilation_w)
-        # projector for output, log_s and t
+        # projector for log_s and t
         self.proj_log_s = ZeroConv2d(filter_size, in_channel)
         self.proj_t = ZeroConv2d(filter_size, in_channel)
 
@@ -62,7 +62,7 @@ class WaveFlowCoupling2D(nn.Module):
 
 
 def reverse_order(x):
-    # reverse order of x and c along channel dimension (instead of change_order of bipartite flow)
+    # reverse order of x and c along channel dimension
     x = torch.flip(x, dims=(2,))
     return x
 

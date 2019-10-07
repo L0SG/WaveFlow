@@ -78,7 +78,7 @@ class ResBlock2D(nn.Module):
 
 
 class Wavenet2D(nn.Module):
-    # a varient of WaveNet-like arch that operates on 2D feature for WF
+    # a variant of WaveNet-like arch that operates on 2D feature for WF
     def __init__(self, in_channels=1, out_channels=2, num_layers=6,
                  residual_channels=256, gate_channels=256, skip_channels=256,
                  kernel_size=3, cin_channels=80, dilation_h=None, dilation_w=None):
