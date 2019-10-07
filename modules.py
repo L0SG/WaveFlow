@@ -7,7 +7,7 @@ import torch.nn.functional as F
 class Conv2D(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, dilation_h=1, dilation_w=1):
         super(Conv2D, self).__init__()
-        self.padding_h = dilation_h * (kernel_size - 1) # causal along height
+        self.padding_h = dilation_h * (kernel_size - 1)  # causal along height
         self.padding_w = dilation_w * (kernel_size - 1) // 2  # noncausal along width
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size,
                               dilation=(dilation_h, dilation_w), padding=(self.padding_h, self.padding_w))
@@ -93,10 +93,9 @@ class Wavenet2D(nn.Module):
 
         self.res_blocks = nn.ModuleList()
         for n in range(num_layers):
-             self.res_blocks.append(ResBlock2D(residual_channels, gate_channels, skip_channels,
-                                                    kernel_size,
-                                                    cin_channels=cin_channels, local_conditioning=True,
-                                                    dilation_h=dilation_h[n], dilation_w=dilation_w[n]))
+            self.res_blocks.append(ResBlock2D(residual_channels, gate_channels, skip_channels, kernel_size,
+                                              cin_channels=cin_channels, local_conditioning=True,
+                                              dilation_h=dilation_h[n], dilation_w=dilation_w[n]))
 
         self.final_conv = nn.Sequential(
             nn.ReLU(),

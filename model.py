@@ -10,7 +10,8 @@ logabs = lambda x: torch.log(torch.abs(x))
 
 
 class WaveFlowCoupling2D(nn.Module):
-    def __init__(self, in_channel, cin_channel, filter_size=256, num_layer=6, num_height=None, layers_per_dilation_h_cycle=3):
+    def __init__(self, in_channel, cin_channel, filter_size=256, num_layer=6, num_height=None,
+                 layers_per_dilation_h_cycle=3):
         super().__init__()
         assert num_height is not None
         self.num_height = num_height
@@ -20,13 +21,14 @@ class WaveFlowCoupling2D(nn.Module):
         self.dilation_w = []
         self.kernel_size = 3
         for i in range(num_layer):
-            self.dilation_h.append(2**(i % self.layers_per_dilation_h_cycle))
-            self.dilation_w.append(2**i)
+            self.dilation_h.append(2 ** (i % self.layers_per_dilation_h_cycle))
+            self.dilation_w.append(2 ** i)
 
         self.net = Wavenet2D(in_channels=in_channel, out_channels=filter_size,
-                           num_layers=num_layer, residual_channels=filter_size,
-                           gate_channels=filter_size, skip_channels=filter_size,
-                           kernel_size=3, cin_channels=cin_channel, dilation_h=self.dilation_h, dilation_w=self.dilation_w)
+                             num_layers=num_layer, residual_channels=filter_size,
+                             gate_channels=filter_size, skip_channels=filter_size,
+                             kernel_size=3, cin_channels=cin_channel, dilation_h=self.dilation_h,
+                             dilation_w=self.dilation_w)
         # projector for output, log_s and t
         self.proj_log_s = ZeroConv2d(filter_size, in_channel)
         self.proj_t = ZeroConv2d(filter_size, in_channel)
@@ -46,7 +48,7 @@ class WaveFlowCoupling2D(nn.Module):
         x_shift = shift_1d(x)
 
         for i_h in range(self.num_height):
-            x_in, c_in = x_shift[:, :, :i_h+1, :], c[:, :, :i_h+1, :]
+            x_in, c_in = x_shift[:, :, :i_h + 1, :], c[:, :, :i_h + 1, :]
             feat = self.net(x_in, c_in)[:, :, -1, :].unsqueeze(2)
             log_s = self.proj_log_s(feat)
             t = self.proj_t(feat)
@@ -54,10 +56,9 @@ class WaveFlowCoupling2D(nn.Module):
             z_trans = z[:, :, i_h, :].unsqueeze(2)
             z[:, :, i_h, :] = (z_trans - t) * torch.exp(-log_s)
             x[:, :, i_h, :] = z[:, :, i_h, :]
-            if i_h != (self.num_height -1):
-                x_shift[:, :, i_h+1] = x[:, :, i_h, :]
+            if i_h != (self.num_height - 1):
+                x_shift[:, :, i_h + 1] = x[:, :, i_h, :]
         return z, c, x
-
 
 
 def reverse_order(x):
@@ -70,8 +71,9 @@ class Flow(nn.Module):
     def __init__(self, in_channel, cin_channel, filter_size, num_layer, num_height, layers_per_dilation_h_cycle):
         super().__init__()
 
-        self.coupling = WaveFlowCoupling2D(in_channel, cin_channel, filter_size=filter_size, num_layer=num_layer, num_height=num_height,
-                                           layers_per_dilation_h_cycle=layers_per_dilation_h_cycle,)
+        self.coupling = WaveFlowCoupling2D(in_channel, cin_channel, filter_size=filter_size, num_layer=num_layer,
+                                           num_height=num_height,
+                                           layers_per_dilation_h_cycle=layers_per_dilation_h_cycle, )
 
     def forward(self, x, c=None):
         out, logdet = self.coupling(x, c)
@@ -86,14 +88,6 @@ class Flow(nn.Module):
         x = reverse_order(x)
         z, c, x = self.coupling.reverse(z, c, x)
         return z, c, x
-
-
-def gaussian_log_p(x, mean, log_sd):
-    return -0.5 * log(2 * pi) - log_sd - 0.5 * (x - mean) ** 2 / torch.exp(2 * log_sd)
-
-
-def gaussian_sample(eps, mean, log_sd):
-    return mean + torch.exp(log_sd) * eps
 
 
 def squeeze_to_2d(x, c, h):
@@ -210,15 +204,14 @@ class WaveFlow(nn.Module):
         return c
 
 
-
 if __name__ == "__main__":
     # x = torch.arange(end=7*15872).view((7, 1, 15872)).float().cuda()
     # c = torch.arange(end=7*80*62).view((7, 80, 62)).float().cuda()
     # net = WaveFlow(1, 80, 128, 64, 8, 8, 5).cuda()
     # out = net(x, c)
 
-    #x = torch.arange(end=1*15872).view((1, 1, 15872)).float().cuda()
-    c = torch.arange(end=1*80*65).view((1, 80, 65)).float().cuda()
+    # x = torch.arange(end=1*15872).view((1, 1, 15872)).float().cuda()
+    c = torch.arange(end=1 * 80 * 65).view((1, 80, 65)).float().cuda()
     net = WaveFlow(1, 80, 128, 64, 8, 8, 5).cuda().eval()
     with torch.no_grad():
         out = net.reverse(c)

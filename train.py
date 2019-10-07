@@ -15,7 +15,6 @@ import gc
 from torch.utils.tensorboard import SummaryWriter
 from utils import get_lr
 
-
 torch.backends.cudnn.benchmark = True
 np.set_printoptions(precision=4)
 torch.manual_seed(1111)
@@ -40,15 +39,15 @@ parser.add_argument('--n_height', type=int, default=64,
                     help='Number of height for 2D matrix conversion of 1D waveform. notated as h.')
 parser.add_argument('--n_layer', type=int, default=8, help='Number of layers')
 parser.add_argument('--n_flow', type=int, default=8, help='Number of layers')
-parser.add_argument('--n_layer_per_cycle', type=int, default=1, help="number of layers inside a single flow for height dilation cycle."
-                                                                     "ex: 3 with --n_layer=8 equals [1 2 4 1 2 4 1 2]"
-                                                                     "ex2: 5 with --n_layer=8 equals [1 2 4 8 16 1 2 4]")
+parser.add_argument('--n_layer_per_cycle', type=int, default=1,
+                    help="number of layers inside a single flow for height dilation cycle."
+                         "ex: 3 with --n_layer=8 equals [1 2 4 1 2 4 1 2]"
+                         "ex2: 5 with --n_layer=8 equals [1 2 4 8 16 1 2 4]")
 
 parser.add_argument('--num_workers', type=int, default=2, help='Number of workers')
 parser.add_argument('--num_gpu', type=int, default=1, help='Number of GPUs to use. >1 uses DataParallel')
 
 parser.add_argument('--temp', type=float, default=1.0, help='Temperature')
-
 
 args = parser.parse_args()
 
@@ -91,7 +90,6 @@ synth_loader = DataLoader(test_dataset, batch_size=1, collate_fn=collate_fn_synt
 
 
 def build_model():
-    pretrained = True if args.load_step > 0 else False
     model = WaveFlow(in_channel=1,
                      cin_channel=args.cin_channels,
                      res_channel=args.res_channels,
@@ -130,7 +128,7 @@ def train(epoch, model, optimizer, scheduler):
 
         epoch_loss += loss.item()
         if (batch_idx + 1) % display_step == 0:
-            print('Global Step : {}, [{}, {}] [Log pdf, Log p(z), Log Det] : {}, grad_norm: {}'
+            print('Global Step : {}, [{}, {}] [Log pdf, Log p(z), Log Det] : {}, grad_norm: {:.4f}'
                   .format(global_step, epoch, batch_idx + 1, np.array(running_loss), grad_norm))
             writer.add_scalar('loss/total', running_loss[0], global_step)
             writer.add_scalar('loss/log_p', running_loss[1], global_step)
@@ -243,7 +241,6 @@ if __name__ == "__main__":
 
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_decay_step, gamma=args.lr_decay_gamma)
-    criterion_frame = nn.MSELoss()
 
     global_step = 0
     global_epoch = 0
