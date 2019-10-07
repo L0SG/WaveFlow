@@ -13,17 +13,18 @@ import time
 import json
 import gc
 
-torch.backends.cudnn.benchmark = True
+torch.backends.cudnn.benchmark = False
 np.set_printoptions(precision=4)
 torch.manual_seed(1111)
 
 parser = argparse.ArgumentParser(description='Train WaveFlow of LJSpeech',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('--data_path', type=str, default='/home/tkdrlf9202/Datasets/LJSpeech-preprocessed/',
+parser.add_argument('--data_path', type=str, default='./ljspeech_data',
                     help='Dataset Path')
 parser.add_argument('--output_path', type=str, default='./output')
 
 parser.add_argument('--model_name', type=str, default='waveflow', help='Model Name')
+parser.add_argument('--batch_size', '-b', type=int, default=8, help='Batch size.')
 parser.add_argument('--load_step', type=int, default=0, help='Load Step')
 
 parser.add_argument('--cin_channels', type=int, default=80, help='Cin Channels')
@@ -113,7 +114,7 @@ def synthesize(model):
 
 
 def load_checkpoint(step, model):
-    checkpoint_path = os.path.join(args.load, args.model_name, "checkpoint_step{:09d}.pth".format(step))
+    checkpoint_path = os.path.join(args.param_path, args.model_name, "checkpoint_step{:09d}.pth".format(step))
     print("Load checkpoint from: {}".format(checkpoint_path))
     checkpoint = torch.load(checkpoint_path)
     # generalized load procedure for both single-gpu and DataParallel models
