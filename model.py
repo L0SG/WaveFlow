@@ -44,21 +44,20 @@ class WaveFlowCoupling2D(nn.Module):
         logdet = torch.sum(log_s)
         return out, logdet
 
-    def reverse(self, z, c=None, x=None):
-        x_shift = shift_1d(x)
+    def reverse(self, z, c=None):
+        z_shift = shift_1d(z)
 
         for i_h in range(self.num_height):
-            x_in, c_in = x_shift[:, :, :i_h + 1, :], c[:, :, :i_h + 1, :]
-            feat = self.net(x_in, c_in)[:, :, -1, :].unsqueeze(2)
+            z_in, c_in = z_shift[:, :, :i_h + 1, :], c[:, :, :i_h + 1, :]
+            feat = self.net(z_in, c_in)[:, :, -1, :].unsqueeze(2)
             log_s = self.proj_log_s(feat)
             t = self.proj_t(feat)
 
             z_trans = z[:, :, i_h, :].unsqueeze(2)
             z[:, :, i_h, :] = (z_trans - t) * torch.exp(-log_s)
-            x[:, :, i_h, :] = z[:, :, i_h, :]
             if i_h != (self.num_height - 1):
-                x_shift[:, :, i_h + 1] = x[:, :, i_h, :]
-        return z, c, x
+                z_shift[:, :, i_h + 1] = z[:, :, i_h, :]
+        return z, c
 
 
 def reverse_order(x):
@@ -82,12 +81,11 @@ class Flow(nn.Module):
 
         return out, c, logdet
 
-    def reverse(self, z, c=None, x=None):
+    def reverse(self, z, c=None):
         z = reverse_order(z)
         c = reverse_order(c)
-        x = reverse_order(x)
-        z, c, x = self.coupling.reverse(z, c, x)
-        return z, c, x
+        z, c = self.coupling.reverse(z, c)
+        return z, c
 
 
 def squeeze_to_2d(x, c, h):
@@ -185,13 +183,11 @@ class WaveFlow(nn.Module):
         q_0 = Normal(c.new_zeros((B, 1, c.size()[2], c.size()[3])), c.new_ones((B, 1, c.size()[2], c.size()[3])))
         z = q_0.sample() * temp
 
-        # container that stores the generated output
-        x = c.new_zeros((B, 1, c.size()[2], c.size()[3]))
-
         for i, flow in enumerate(self.flows[::-1]):
-            z, c, x = flow.reverse(z, c, x)
+            z, c = flow.reverse(z, c)
 
-        x = unsqueeze_to_1d(x, self.n_height)
+        x = unsqueeze_to_1d(z, self.n_height)
+
         if len_pad != 0:
             x = x[:, :-len_pad]
         return x
