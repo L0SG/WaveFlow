@@ -27,6 +27,9 @@ parser.add_argument('--output_path', type=str, default='./output')
 
 parser.add_argument('--model_name', type=str, default='waveflow', help='Model Name')
 parser.add_argument('--load_step', type=int, default=0, help='Load Step')
+parser.add_argument('--load_param_only', default=False, action='store_true',
+                    help='only load model parameters from checkpoint. scheduler and optimizer states are reset.')
+
 parser.add_argument('--epochs', '-e', type=int, default=50000, help='Number of epochs to train.')
 parser.add_argument('--batch_size', '-b', type=int, default=8, help='Batch size.')
 parser.add_argument('--learning_rate', '-lr', type=float, default=0.0002, help='The Learning Rate.')
@@ -128,8 +131,8 @@ def train(epoch, model, optimizer, scheduler):
 
         epoch_loss += loss.item()
         if (batch_idx + 1) % display_step == 0:
-            print('Global Step : {}, [{}, {}] [Log pdf, Log p(z), Log Det] : {}, grad_norm: {:.4f}'
-                  .format(global_step, epoch, batch_idx + 1, np.array(running_loss), grad_norm))
+            print('Global Step : {}, [{}, {}] [Log pdf, Log p(z), Log Det] : {}, grad_norm: {:.4f}, lr: {:.4f}'
+                  .format(global_step, epoch, batch_idx + 1, np.array(running_loss), grad_norm, get_lr(optimizer)))
             writer.add_scalar('loss/total', running_loss[0], global_step)
             writer.add_scalar('loss/log_p', running_loss[1], global_step)
             writer.add_scalar('loss/logdet', running_loss[2], global_step)
@@ -205,7 +208,7 @@ def save_checkpoint(model, optimizer, scheduler, global_step, global_epoch):
                 "global_epoch": global_epoch}, checkpoint_path)
 
 
-def load_checkpoint(step, model, optimizer, scheduler):
+def load_checkpoint(step, model, optimizer, scheduler, load_param_only):
     global global_step
     global global_epoch
 
@@ -227,11 +230,14 @@ def load_checkpoint(step, model, optimizer, scheduler):
             new_state_dict[name] = v
         model.load_state_dict(new_state_dict)
 
-    optimizer.load_state_dict(checkpoint["optimizer"])
-    scheduler.load_state_dict(checkpoint["scheduler"])
-    global_step = checkpoint["global_step"]
-    global_epoch = checkpoint["global_epoch"]
-
+    if not load_param_only:
+        print("Load optimizer and scheduler states from: {}".format(checkpoint_path))
+        optimizer.load_state_dict(checkpoint["optimizer"])
+        scheduler.load_state_dict(checkpoint["scheduler"])
+        global_step = checkpoint["global_step"]
+        global_epoch = checkpoint["global_epoch"]
+    else:
+        print("--load_param_only is set to True. only model parameters are loaded from {}".format(checkpoint_path))
     return model, optimizer, scheduler
 
 
@@ -255,12 +261,18 @@ if __name__ == "__main__":
         log.write(json.dumps(state) + '\n')
         test_loss = 100.0
     else:
-        model, optimizer, scheduler = load_checkpoint(load_step, model, optimizer, scheduler)
-        list_train_loss = np.load('{}/{}_train.npy'.format(args.loss_path, args.model_name)).tolist()
-        list_loss = np.load('{}/{}.npy'.format(args.loss_path, args.model_name)).tolist()
-        list_train_loss = list_train_loss[:global_epoch]
-        list_loss = list_loss[:global_epoch]
-        test_loss = np.min(list_loss)
+        model, optimizer, scheduler = load_checkpoint(load_step, model, optimizer, scheduler, args.load_param_only)
+        if not args.load_param_only:
+            list_train_loss = np.load('{}/{}_train.npy'.format(args.loss_path, args.model_name)).tolist()
+            list_loss = np.load('{}/{}.npy'.format(args.loss_path, args.model_name)).tolist()
+            list_train_loss = list_train_loss[:global_epoch]
+            list_loss = list_loss[:global_epoch]
+            test_loss = np.min(list_loss)
+        else:
+            load_step = 0
+            list_train_loss, list_loss = [], []
+            log.write(json.dumps(state) + '\n')
+            test_loss = 100.0
 
     if args.num_gpu > 1:
         print("num_gpu > 1 detected. converting the model to DataParallel...")
