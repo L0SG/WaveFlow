@@ -163,7 +163,10 @@ class WaveFlow(nn.Module):
         for flow in self.flows:
             out, c, logdet_new = flow(out, c)
             logdet = logdet + logdet_new
-        log_p_sum += ((-0.5) * (log(2.0 * pi) + 2.0 * out.pow(2)).sum())
+
+        # TODO: which log_p? the commented line is the one from the paper but the below is the correct Gaussian pdf..
+        # log_p_sum += ((-0.5) * (log(2.0 * pi) + 2.0 * out.pow(2)).sum())
+        log_p_sum += ((-0.5) * (log(2.0 * pi) + out.pow(2)).sum())
 
         logdet = logdet / (B * T)
         log_p = log_p_sum / (B * T)
