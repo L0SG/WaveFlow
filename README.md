@@ -6,7 +6,7 @@ Currently WIP. The implementation details may not be faithful.
 
 # Requirements
 
-PyTorch 1.1.0 or later (tested on 1.2.0) & python 3.6 & Librosa
+PyTorch 1.1.0 or later (tested on 1.3.0) & python 3.6 & Librosa
 
 
 # Examples

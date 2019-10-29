@@ -6,8 +6,6 @@ import math
 import torch.nn.functional as F
 from torch.distributions.normal import Normal
 
-logabs = lambda x: torch.log(torch.abs(x))
-
 
 class WaveFlowCoupling2D(nn.Module):
     def __init__(self, in_channel, cin_channel, filter_size=256, num_layer=6, num_height=None,
@@ -54,9 +52,9 @@ class WaveFlowCoupling2D(nn.Module):
             t = self.proj_t(feat)
 
             z_trans = z[:, :, i_h, :].unsqueeze(2)
-            z[:, :, i_h, :] = (z_trans - t) * torch.exp(-log_s)
+            z[:, :, i_h, :] = ((z_trans - t) * torch.exp(-log_s)).squeeze(2)
             if i_h != (self.num_height - 1):
-                z_shift[:, :, i_h + 1] = z[:, :, i_h, :]
+                z_shift[:, :, i_h + 1] = z[:, :, i_h]
         return z, c
 
 
@@ -204,13 +202,11 @@ class WaveFlow(nn.Module):
 
 
 if __name__ == "__main__":
-    # x = torch.arange(end=7*15872).view((7, 1, 15872)).float().cuda()
-    # c = torch.arange(end=7*80*62).view((7, 80, 62)).float().cuda()
-    # net = WaveFlow(1, 80, 128, 64, 8, 8, 5).cuda()
-    # out = net(x, c)
+    x = torch.randn((2, 1, 15872)).cuda()
+    c = torch.randn((2, 80, 62)).cuda()
+    net = WaveFlow(1, 80, 128, 64, 8, 8, 5).cuda()
+    out = net(x, c)
 
-    # x = torch.arange(end=1*15872).view((1, 1, 15872)).float().cuda()
-    c = torch.arange(end=1 * 80 * 65).view((1, 80, 65)).float().cuda()
-    net = WaveFlow(1, 80, 128, 64, 8, 8, 5).cuda().eval()
+    net.eval()
     with torch.no_grad():
         out = net.reverse(c)

@@ -28,7 +28,7 @@ class ZeroConv2d(nn.Module):
         self.conv = nn.Conv2d(in_channel, out_channel, 1, padding=0)
         self.conv.weight.data.zero_()
         self.conv.bias.data.zero_()
-        self.scale = nn.Parameter(torch.zeros(1, out_channel, 1))
+        self.scale = nn.Parameter(torch.zeros(1, out_channel, 1, 1))
 
     def forward(self, x):
         out = self.conv(x)
