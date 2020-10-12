@@ -111,8 +111,6 @@ def load_averaged_checkpoint_warm_start(checkpoint_path, model, optimizer, sched
 def save_checkpoint(model, optimizer, scheduler, learning_rate, iteration, filepath):
     print("Saving model and optimizer state at iteration {} to {}".format(
         iteration, filepath))
-    # model_for_saving = WaveGlow(**waveglow_config).cuda()
-    # model_for_saving.load_state_dict(model.state_dict())
     if hasattr(model, 'module'):
         model_state_dict = model.module.state_dict()  # dataparallel case
     else:
@@ -142,7 +140,6 @@ def train(model, num_gpus, output_directory, epochs, learning_rate, lr_decay_ste
 
                 loss = criterion(outputs)
                 if num_gpus > 1:
-                    # reduced_loss = reduce_tensor(loss.data, num_gpus).item()
                     reduced_loss = loss.mean().item()
                 else:
                     reduced_loss = loss.item()
@@ -158,12 +155,6 @@ def train(model, num_gpus, output_directory, epochs, learning_rate, lr_decay_ste
     def synthesize(sigma):
         model.eval()
         # synthesize loop
-        if hasattr(model, 'cache_flow_embed'):
-            model.h_cache = model.cache_flow_embed()  # used for flow conditioning models
-        elif hasattr(model, 'module'):  # dataparallel case
-            if hasattr(model.module, 'cache_flow_embed'):
-                model.module.h_cache = model.module.cache_flow_embed()
-
         for i, batch in enumerate(synth_loader):
             if i == 0:
                 with torch.no_grad():
@@ -329,9 +320,6 @@ def synthesize_master(model, num_gpus, temp, output_directory, epochs, learning_
     iteration = 0
     if checkpoint_path != "":
         model, _, _, iteration = load_checkpoint(checkpoint_path, model, None, None)
-        if hasattr(model, 'cache_flow_embed'):
-            model.h_cache = model.cache_flow_embed()  # used for flow conditioning models
-
     # remove all weight_norm from the model
     model.remove_weight_norm()
     # fuse mel-spec conditioning layer weights to maximize speed
