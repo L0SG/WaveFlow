@@ -71,6 +71,13 @@ Please refer to the [official implementation] written in PaddlePaddle for the of
    ```
    if `fp16_run: true`, the model uses FP16 (half-precision) arithmetic for faster performance (on GPUs equipped with Tensor Cores).
    
+   
+## Reference
+NVIDIA Tacotron2: https://github.com/NVIDIA/waveglow
+NVIDIA WaveGlow: https://github.com/NVIDIA/waveglow
+r9y9 wavenet-vocoder: https://github.com/r9y9/wavenet_vocoder
+FloWaveNet: https://github.com/ksw0306/FloWaveNet
+Parakeet: https://github.com/PaddlePaddle/Parakeet
 
 [Tacotron2]: https://github.com/NVIDIA/tacotron2
 [DataParallel]: https://pytorch.org/docs/stable/generated/torch.nn.DataParallel.html
