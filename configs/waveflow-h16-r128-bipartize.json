@@ -32,6 +32,6 @@
       "n_layer": 8,
       "n_flow": 8,
       "n_layer_per_cycle": 1,
-      "coupling_type": "waveflow-bipartize"
+      "coupling_type": "waveflow_bipartize"
     }
 }
