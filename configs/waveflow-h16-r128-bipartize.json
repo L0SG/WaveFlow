@@ -1,0 +1,37 @@
+{
+    "train_config": {
+        "fp16_run": false,
+        "output_directory": "experiments",
+        "epochs": 100000,
+        "learning_rate": 2e-4,
+        "lr_decay_step": 3000000,
+        "lr_decay_gamma": 0.5,
+        "sigma": 1.0,
+        "iters_per_checkpoint": 5000,
+        "batch_size": 8,
+        "seed": 1234,
+        "checkpoint_path": "",
+        "with_tensorboard": true
+    },
+    "data_config": {
+        "training_files": "train_files.txt",
+        "test_files": "test_files.txt",
+        "segment_length": 16000,
+        "sampling_rate": 22050,
+        "filter_length": 1024,
+        "hop_length": 256,
+        "win_length": 1024,
+        "mel_fmin": 0.0,
+        "mel_fmax": 8000.0
+    },
+    "waveflow_config": {
+      "model_name": "waveflow-h16-r128-bipartize",
+      "cin_channels": 80,
+      "res_channels": 128,
+      "n_height": 16,
+      "n_layer": 8,
+      "n_flow": 8,
+      "n_layer_per_cycle": 1,
+      "coupling_type": "waveflow-bipartize"
+    }
+}
