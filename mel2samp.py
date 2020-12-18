@@ -131,7 +131,8 @@ class Mel2Samp(torch.utils.data.Dataset):
         else:
             # full audio segment but with multiples of hop length for full-clip eval loop
             cut_len = audio.size(0) % self.hop_length
-            audio = audio[:-cut_len]
+            if cut_len != 0:
+                audio = audio[:-cut_len]
 
         mel = self.get_mel(audio)
         audio = audio / MAX_WAV_VALUE
